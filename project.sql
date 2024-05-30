@@ -1,10 +1,5 @@
 CREATE DATABASE `CompanyInventory`;
-CREATE TABLE `Item`(
-    `item_id` INT,
-    `item_name` VARCHAR(512),
-    `category` VARCHAR(128),
-    `quantity_sold` INT
-);
+USE `CompanyInventory`;
 CREATE TABLE `Accounts`(
     `total_revenue` INT,
     `item_name` VARCHAR(512),
@@ -13,8 +8,8 @@ CREATE TABLE `Accounts`(
 CREATE TABLE `SupplierOrder`(
     `order_id` INT,
     `quantity` INT,
-    `item_name` VARCHAR(512)
-    `unit_price` INT
+    `item_name` VARCHAR(512),
+    `unit_price` INT,
     `total_price` INT
 );
 CREATE TABLE `Admin`(
