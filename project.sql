@@ -131,3 +131,67 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 LINES;
+
+-- Aggregation Queries
+
+-- Total Revenue and Quantity Sold per Item
+SELECT 
+    i.item_id,
+    i.item_name,
+    SUM(a.total_revenue) AS total_revenue,
+    SUM(a.quantity_sold) AS total_quantity_sold
+FROM 
+    Accounts a
+JOIN 
+    Item i ON a.item_id = i.item_id
+GROUP BY 
+    i.item_id, i.item_name;
+
+-- Total Orders and Revenue per Supplier
+SELECT 
+    s.supplier_id,
+    s.name,
+    COUNT(so.order_id) AS total_orders,
+    SUM(so.total_price) AS total_revenue
+FROM 
+    SupplierOrder so
+JOIN 
+    Supplier s ON so.supplier_id = s.supplier_id
+GROUP BY 
+    s.supplier_id, s.name;
+
+-- Total Sales and Average Sales Amount per Month
+SELECT 
+    YEAR(si.date_sold) AS year,
+    MONTH(si.date_sold) AS month,
+    COUNT(si.sale_id) AS total_sales,
+    SUM(si.total_amount) AS total_revenue,
+    AVG(si.total_amount) AS average_sale_amount
+FROM 
+    SaleInformation si
+GROUP BY 
+    YEAR(si.date_sold), MONTH(si.date_sold);
+
+-- Total Quantity of Each Item in the Warehouse
+SELECT 
+    w.item_id,
+    i.item_name,
+    SUM(w.item_total_quantity) AS total_quantity
+FROM 
+    Warehouse w
+JOIN 
+    Item i ON w.item_id = i.item_id
+GROUP BY 
+    w.item_id, i.item_name;
+
+-- Number of Customers and Total Purchases per Address
+SELECT 
+    c.address,
+    COUNT(c.customer_id) AS number_of_customers,
+    SUM(si.total_amount) AS total_purchases
+FROM 
+    CustomerInformation c
+JOIN 
+    SaleInformation si ON c.customer_id = si.customer_id
+GROUP BY 
+    c.address;
