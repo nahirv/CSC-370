@@ -67,6 +67,13 @@ FOREIGN KEY (`item_id`) REFERENCES `Item`(`item_id`);
 -- Data Propogation
 SHOW VARIABLES LIKE 'secure_file_priv';
 
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\item_data.csv'
+INTO TABLE Item
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\accounts_data.csv'
 INTO TABLE Accounts
 FIELDS TERMINATED BY ',' 
@@ -94,13 +101,6 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES;
 
 SELECT * FROM CustomerInformation;
-
-LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\item_data.csv'
-INTO TABLE Item
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
-IGNORE 1 LINES;
 
 SELECT * FROM Item;
 
