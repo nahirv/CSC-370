@@ -15,8 +15,8 @@ CREATE TABLE `Item` (
 CREATE TABLE `Accounts`(
 	`item_id` INT PRIMARY KEY,
     `sale_unit_price` INT,
-    `total_revenue` INT,
     `quantity_sold` INT,
+    `total_revenue` INT,
     FOREIGN KEY (`item_id`) REFERENCES Item(`item_id`)
 ); 
 
@@ -66,14 +66,6 @@ CREATE TABLE `SaleInformation`(
     `total_amount` INT,
     `shipping_information` VARCHAR(1024),
     FOREIGN KEY (`customer_id`) REFERENCES CustomerInformation(`customer_id`)
-);
-
--- Customer Information
-CREATE TABLE `CustomerInformation`(
-    `customer_id` INT PRIMARY KEY, 
-    `email` VARCHAR(512),
-    `phone_number` INT,
-    `address` VARCHAR(128)
 );
 
 -- Customer Names (Weak Entity Set)
