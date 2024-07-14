@@ -1,82 +1,91 @@
-CREATE DATABASE `CompanyInventory`;
-USE `CompanyInventory`;
+CREATE DATABASE CompanyInventory;
+USE CompanyInventory;
 
 -- Creating the Tables
 
 -- Item (Base Class)
-CREATE TABLE `Item` (
-    `item_id` INT PRIMARY KEY,
-    `category` VARCHAR(512),
-    `item_name` VARCHAR(512),
-    `quantity_sold` INT
+CREATE TABLE Item (
+    item_id INT PRIMARY KEY,
+    category VARCHAR(512) NOT NULL,
+    item_name VARCHAR(512) NOT NULL,
+    quantity_sold INT DEFAULT 0 CHECK (quantity_sold >= 0)
 );
 
 -- Accounts (Subclass)
-CREATE TABLE `Accounts`(
-	`item_id` INT PRIMARY KEY,
-    `sale_unit_price` INT,
-    `quantity_sold` INT,
-    `total_revenue` INT,
-    FOREIGN KEY (`item_id`) REFERENCES Item(`item_id`)
+CREATE TABLE Accounts(
+    item_id INT PRIMARY KEY,
+    sale_unit_price INT NOT NULL CHECK (sale_unit_price >= 0),
+    quantity_sold INT NOT NULL CHECK (quantity_sold >= 0),
+    total_revenue INT NOT NULL CHECK (total_revenue >= 0),
+    FOREIGN KEY (item_id) REFERENCES Item(item_id)
 ); 
 
 -- Warehouse (Subclass)
-CREATE TABLE `Warehouse`(
-    `address` VARCHAR(128) PRIMARY KEY,
-    `item_id` INT, 
-    `item_total_quantity` INT,
-    `order_history` VARCHAR(2048),
-    FOREIGN KEY (`item_id`) REFERENCES Item(`item_id`)
+CREATE TABLE Warehouse(
+    address VARCHAR(128) PRIMARY KEY,
+    item_id INT NOT NULL, 
+    item_total_quantity INT NOT NULL CHECK (item_total_quantity >= 0),
+    order_history VARCHAR(2048),
+    FOREIGN KEY (item_id) REFERENCES Item(item_id)
 );
 
 -- Supplier Information (Base Class)
-CREATE TABLE `SupplierInformation`(
-    `address` VARCHAR(512) PRIMARY KEY,
-    `name` VARCHAR(512),
-    `money_owed` VARCHAR(512),
-    `order_history` VARCHAR(512)
+CREATE TABLE SupplierInformation(
+    address VARCHAR(512) PRIMARY KEY,
+    name VARCHAR(512) NOT NULL,
+    money_owed VARCHAR(512) NOT NULL,
+    order_history VARCHAR(512)
 );
 
 -- Supplier Order (Subclass)
-CREATE TABLE `SupplierOrder`(
-    `order_id` INT PRIMARY KEY,
-    `address` VARCHAR(512),
-    `item_id` INT, 
-    `quantity` INT,
-    `unit_price` INT,
-    `total_price` INT,
-    `order_date` DATE,
-    FOREIGN KEY (`address`) REFERENCES SupplierInformation(`address`),
-    FOREIGN KEY (`item_id`) REFERENCES Item(`item_id`)
+CREATE TABLE SupplierOrder(
+    order_id INT PRIMARY KEY,
+    address VARCHAR(512) NOT NULL,
+    item_id INT NOT NULL, 
+    quantity INT NOT NULL CHECK (quantity >= 0),
+    unit_price INT NOT NULL CHECK (unit_price >= 0),
+    total_price INT NOT NULL CHECK (total_price >= 0),
+    order_date DATE NOT NULL,
+    FOREIGN KEY (address) REFERENCES SupplierInformation(address),
+    FOREIGN KEY (item_id) REFERENCES Item(item_id)
 );
 
 -- Admin
-CREATE TABLE `Admin`(
-    `admin_id` INT PRIMARY KEY,
-    `admin_role` VARCHAR(64)
+CREATE TABLE Admin(
+    admin_id INT PRIMARY KEY,
+    admin_role VARCHAR(64) NOT NULL
+);
+
+-- Customer Information (missing in original code)
+CREATE TABLE CustomerInformation(
+    customer_id INT PRIMARY KEY,
+    address VARCHAR(512) NOT NULL,
+    name VARCHAR(512) NOT NULL,
+    money_owed VARCHAR(512),
+    order_history VARCHAR(512)
 );
 
 -- Sale Information
-CREATE TABLE `SaleInformation`(
-    `sale_id` INT PRIMARY KEY,
-    `status` VARCHAR(64),
-    `customer_id` INT,
-    `sale_items` VARCHAR(2048),
-    `date_sold` DATE,
-    `total_amount` INT,
-    `shipping_information` VARCHAR(1024),
-    FOREIGN KEY (`customer_id`) REFERENCES CustomerInformation(`customer_id`)
+CREATE TABLE SaleInformation(
+    sale_id INT PRIMARY KEY,
+    status VARCHAR(64) NOT NULL,
+    customer_id INT NOT NULL,
+    sale_items VARCHAR(2048),
+    date_sold DATE NOT NULL,
+    total_amount INT NOT NULL CHECK (total_amount >= 0),
+    shipping_information VARCHAR(1024),
+    FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
 
 -- Customer Names (Weak Entity Set)
-CREATE TABLE `CustomerNames` (
-    `customer_id` INT,
-    `customer_name` VARCHAR(64),
-    PRIMARY KEY (`customer_id`, `customer_name`),
-    FOREIGN KEY (`customer_id`) REFERENCES CustomerInformation(`customer_id`)
+CREATE TABLE CustomerNames (
+    customer_id INT,
+    customer_name VARCHAR(64) NOT NULL,
+    PRIMARY KEY (customer_id, customer_name),
+    FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
 
--- Data Propogation
+-- Data Propagation
 SHOW VARIABLES LIKE 'secure_file_priv';
 
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\item_data.csv'
@@ -168,16 +177,16 @@ GROUP BY
 
 -- Total Orders and Revenue per Supplier
 SELECT 
-    s.supplier_id,
+    s.address,
     s.name,
     COUNT(so.order_id) AS total_orders,
     SUM(so.total_price) AS total_revenue
 FROM 
     SupplierOrder so
 JOIN 
-    Supplier s ON so.supplier_id = s.supplier_id
+    SupplierInformation s ON so.address = s.address
 GROUP BY 
-    s.supplier_id, s.name;
+    s.address, s.name;
 
 -- Total Sales and Average Sales Amount per Month
 SELECT 
@@ -214,3 +223,14 @@ JOIN
     SaleInformation si ON c.customer_id = si.customer_id
 GROUP BY 
     c.address;
+
+--Trigger to update quantity_sold in Item table
+CREATE TRIGGER update_quantity_sold
+AFTER INSERT ON Accounts
+FOR EACH ROW
+BEGIN
+    UPDATE Item
+    SET quantity_sold = quantity_sold + NEW.quantity_sold
+    WHERE item_id = NEW.item_id;
+END;
+
