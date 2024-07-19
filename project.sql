@@ -60,8 +60,6 @@ CREATE TABLE Admin(
 CREATE TABLE CustomerInformation(
     customer_id INT PRIMARY KEY,
     address VARCHAR(512) NOT NULL,
-    name VARCHAR(512) NOT NULL,
-    money_owed VARCHAR(512),
     order_history VARCHAR(512)
 );
 
@@ -79,9 +77,8 @@ CREATE TABLE SaleInformation(
 
 -- Customer Names (Weak Entity Set)
 CREATE TABLE CustomerNames (
-    customer_id INT,
+    customer_id INT PRIMARY KEY,
     customer_name VARCHAR(64) NOT NULL,
-    PRIMARY KEY (customer_id, customer_name),
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
 
