@@ -1,6 +1,7 @@
 CREATE DATABASE CompanyInventory;
 USE CompanyInventory;
 
+
 -- Creating the Tables
 
 -- Item (Base Class)
@@ -36,6 +37,12 @@ CREATE TABLE SupplierInformation(
     money_owed VARCHAR(512) NOT NULL,
     order_history VARCHAR(512)
 );
+
+SELECT address, COUNT(*)
+FROM SupplierInformation
+GROUP BY address
+HAVING COUNT(*) > 1;
+
 
 -- Supplier Order (Subclass)
 CREATE TABLE SupplierOrder(
@@ -74,7 +81,7 @@ CREATE TABLE SaleInformation(
     shipping_information VARCHAR(1024),
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
-
+SELECT*FROM CustomerInformation;
 -- Customer Names (Weak Entity Set)
 CREATE TABLE CustomerNames (
     customer_id INT PRIMARY KEY,
@@ -99,7 +106,6 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 LINES;
 
-DESCRIBE Accounts;
 SELECT * FROM Accounts;
 
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\admin_data.csv'
@@ -157,35 +163,38 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 LINES;
 
--- Aggregation Queries
-
 -- Total Revenue and Quantity Sold per Item
-SELECT 
-    i.item_id,
-    i.item_name,
-    SUM(a.total_revenue) AS total_revenue,
-    SUM(a.quantity_sold) AS total_quantity_sold
-FROM 
-    Accounts a
-JOIN 
-    Item i ON a.item_id = i.item_id
-GROUP BY 
-    i.item_id, i.item_name;
-
+-- CREATE VIEW TotalRevenue_and_QuantitySold AS
+-- SELECT 
+--     i.item_id,
+--     i.item_name,
+--     SUM(a.total_revenue) AS total_revenue,
+--     SUM(a.quantity_sold) AS total_quantity_sold
+-- FROM 
+--     Accounts a
+-- JOIN 
+--     Item i ON a.item_id = i.item_id
+-- GROUP BY 
+--     i.item_id, i.item_name;
+   
+   
+ -- Aggregation Queries
+ 
 -- Total Orders and Revenue per Supplier
+CREATE VIEW SupplierSummary AS
 SELECT 
-    s.address,
-    s.name,
-    COUNT(so.order_id) AS total_orders,
-    SUM(so.total_price) AS total_revenue
+    s.address, s.name, COUNT(so.order_id) AS total_orders, SUM(so.total_price) AS total_revenue
 FROM 
     SupplierOrder so
 JOIN 
     SupplierInformation s ON so.address = s.address
 GROUP BY 
     s.address, s.name;
+    
+SELECT * FROM SupplierSummary;
 
 -- Total Sales and Average Sales Amount per Month
+CREATE VIEW SalesPerMonth AS
 SELECT 
     YEAR(si.date_sold) AS year,
     MONTH(si.date_sold) AS month,
@@ -197,19 +206,23 @@ FROM
 GROUP BY 
     YEAR(si.date_sold), MONTH(si.date_sold);
 
+
 -- Total Quantity of Each Item in the Warehouse
-SELECT 
-    w.item_id,
-    i.item_name,
-    SUM(w.item_total_quantity) AS total_quantity
-FROM 
-    Warehouse w
-JOIN 
-    Item i ON w.item_id = i.item_id
-GROUP BY 
-    w.item_id, i.item_name;
+-- CREATE VIEW SalesPerMonth AS
+-- SELECT 
+--     w.item_id,
+--     i.item_name,
+--     SUM(w.item_total_quantity) AS total_quantity
+-- FROM 
+--     Warehouse w
+-- JOIN 
+--     Item i ON w.item_id = i.item_id
+-- GROUP BY 
+--     w.item_id, i.item_name;
+
 
 -- Number of Customers and Total Purchases per Address
+CREATE VIEW CustomerPurchases AS
 SELECT 
     c.address,
     COUNT(c.customer_id) AS number_of_customers,
@@ -221,7 +234,8 @@ JOIN
 GROUP BY 
     c.address;
 
---Trigger to update quantity_sold in Item table
+
+-- Trigger to update quantity_sold in Item table
 CREATE TRIGGER update_quantity_sold
 AFTER INSERT ON Accounts
 FOR EACH ROW
@@ -230,4 +244,3 @@ BEGIN
     SET quantity_sold = quantity_sold + NEW.quantity_sold
     WHERE item_id = NEW.item_id;
 END;
-
