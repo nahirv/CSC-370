@@ -71,7 +71,8 @@ CREATE TABLE SaleInformation(
     sale_items VARCHAR(2048),
     date_sold DATE NOT NULL,
     total_amount INT NOT NULL CHECK (total_amount >= 0),
-    shipping_information VARCHAR(1024),
+    tracking_id VARCHAR(64),
+    shipping_company VARCHAR(128),
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
 
