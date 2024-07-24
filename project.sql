@@ -228,3 +228,54 @@ UPDATE Item
 SET quantity_sold = quantity_sold + NEW.quantity_sold
 WHERE item_id = NEW.item_id;
 END;
+
+-- Trigger to update money_owed in SupplierInformation table
+CREATE TRIGGER update_money_owed
+AFTER INSERT ON SupplierOrder
+FOR EACH ROW
+BEGIN
+	UPDATE SupplierInformation
+    SET money_owed = money_owed + NEW.total_price
+    WHERE address = NEW.address;
+END;
+
+-- Trigger to update item_total_quantity in Warehouse table
+CREATE TRIGGER update_warehouse_quantity
+AFTER INSERT ON SupplierOrder
+FOR EACH ROW 
+BEGIN
+    UPDATE Warehouse
+    SET item_total_quantity = item_total_quantity + NEW.quantity
+    WHERE item_id = NEW.item_id;
+END;
+
+-- Create view for profit/loss
+CREATE VIEW TotalCost AS
+SELECT
+	item_id,
+    SUM(total_price) AS total_cost
+FROM
+	SupplierOrder
+GROUP BY 
+	item_id;
+    
+CREATE VIEW TotalRevenue AS
+SELECT
+	item_id,
+    SUM(total_revenue) AS total_revenue
+FROM
+	Accounts
+GROUP BY
+	item_id;
+    
+CREATE VIEW ProfitLoss AS
+SELECT
+	r.item_id,
+    r.total_revenue,
+    c.total_cost,
+    (r.total_revenue - c.total_cost) AS profit_loss
+FROM 
+	TotalRevenue r
+JOIN
+	TotalCost c ON r.item_id = c.item_id;
+    
