@@ -1,6 +1,12 @@
 CREATE DATABASE CompanyInventory;
 USE CompanyInventory;
 -- Creating the Tables
+
+-- Set the transaction isolation level to ensure consistency and isolation
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+START TRANSACTION;
+
 -- Item (Base Class)
 CREATE TABLE Item (
     item_id INT PRIMARY KEY,
@@ -83,7 +89,12 @@ CREATE TABLE CustomerNames (
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
 
+COMMIT;
+
 -- Data Propagation
+START TRANSACTION;
+
+-- Insert data into tables
 SHOW VARIABLES LIKE 'secure_file_priv';
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\item_data.csv' 
 INTO TABLE Item 
@@ -91,54 +102,65 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\accounts_data.csv' 
 INTO TABLE Accounts 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\admin_data.csv' 
 INTO TABLE Admin 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\customer_information_data.csv' 
 INTO TABLE CustomerInformation 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\customer_names_data.csv' 
 INTO TABLE CustomerNames 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\sale_information_data.csv' 
 INTO TABLE SaleInformation 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\supplier_data.csv' 
 INTO TABLE SupplierInformation 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\supplier_order_data.csv' 
 INTO TABLE SupplierOrder 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\warehouse_data.csv' 
 INTO TABLE Warehouse 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
+-- Commit the transaction to apply changes
+COMMIT;
 
 -- Total Revenue and Quantity Sold per Item
 -- CREATE VIEW TotalRevenue_and_QuantitySold AS
@@ -167,8 +189,7 @@ FROM SupplierOrder so
     JOIN SupplierInformation s ON so.address = s.address
 GROUP BY s.address,
     s.name;
-SELECT *
-FROM SupplierSummary;
+
 -- Total Sales and Average Sales Amount per Month
 CREATE VIEW SalesPerMonth AS
 SELECT YEAR(si.date_sold) AS year,
