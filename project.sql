@@ -6,7 +6,6 @@ USE CompanyInventory;
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
 START TRANSACTION;
-
 -- Item (Base Class)
 CREATE TABLE Item (
     item_id INT PRIMARY KEY,
@@ -65,7 +64,7 @@ CREATE TABLE CustomerInformation(
     customer_id INT PRIMARY KEY,
     address VARCHAR(512) NOT NULL,
     email_id VARCHAR(128) NOT NULL,
-    phone_number INT DEFAULT NULL,
+    phone_number BIGINT DEFAULT NULL,
     order_history VARCHAR(512)
 );
 
@@ -88,7 +87,6 @@ CREATE TABLE CustomerNames (
     customer_name VARCHAR(64) NOT NULL,
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
-
 COMMIT;
 
 -- Data Propagation
@@ -103,12 +101,16 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
 
+SELECT * FROM Item;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\accounts_data.csv' 
 INTO TABLE Accounts 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
+SELECT*FROM Accounts;
 
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\admin_data.csv' 
 INTO TABLE Admin 
@@ -117,12 +119,16 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
 
+SELECT * FROM Admin;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\customer_information_data.csv' 
 INTO TABLE CustomerInformation 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
+SELECT * FROM CustomerInformation;
 
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\customer_names_data.csv' 
 INTO TABLE CustomerNames 
@@ -131,6 +137,8 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
 
+SELECT * FROM CustomerNames;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\sale_information_data.csv' 
 INTO TABLE SaleInformation 
 FIELDS TERMINATED BY ',' 
@@ -138,12 +146,16 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
 
+SELECT * FROM SaleInformation;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\supplier_data.csv' 
 INTO TABLE SupplierInformation 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"' 
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
+
+SELECT * FROM SupplierInformation;
 
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\supplier_order_data.csv' 
 INTO TABLE SupplierOrder 
@@ -200,6 +212,8 @@ SELECT YEAR(si.date_sold) AS year,
 FROM SaleInformation si
 GROUP BY YEAR(si.date_sold),
     MONTH(si.date_sold);
+
+
 -- Total Quantity of Each Item in the Warehouse
 -- CREATE VIEW SalesPerMonth AS
 -- SELECT 
@@ -213,6 +227,8 @@ GROUP BY YEAR(si.date_sold),
 -- GROUP BY 
 --     w.item_id, i.item_name;
 -- Number of Customers and Total Purchases per Address
+
+
 CREATE VIEW CustomerPurchases AS
 SELECT c.customer_id,
     c.address,
