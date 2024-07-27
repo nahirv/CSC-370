@@ -164,6 +164,8 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
 
+SELECT * FROM SupplierOrder;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\warehouse_data.csv' 
 INTO TABLE Warehouse 
 FIELDS TERMINATED BY ',' 
@@ -171,7 +173,8 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
 
--- Commit the transaction to apply changes
+SELECT * FROM Warehouse;
+
 COMMIT;
 
 -- Total Revenue and Quantity Sold per Item
@@ -188,9 +191,9 @@ COMMIT;
 -- GROUP BY 
 --     i.item_id, i.item_name;
 
-
 -- Aggregation Queries
 
+START TRANSACTION;
 -- Total Orders and Revenue per Supplier
 CREATE VIEW SupplierSummary AS
 SELECT s.address,
@@ -201,6 +204,9 @@ FROM SupplierOrder so
     JOIN SupplierInformation s ON so.address = s.address
 GROUP BY s.address,
     s.name;
+
+SELECT * FROM SupplierSummary;
+
 
 -- Total Sales and Average Sales Amount per Month
 CREATE VIEW SalesPerMonth AS
@@ -213,6 +219,7 @@ FROM SaleInformation si
 GROUP BY YEAR(si.date_sold),
     MONTH(si.date_sold);
 
+SELECT * FROM SalesPerMonth;
 
 -- Total Quantity of Each Item in the Warehouse
 -- CREATE VIEW SalesPerMonth AS
@@ -238,6 +245,8 @@ FROM CustomerInformation c
     JOIN SaleInformation si ON c.customer_id = si.customer_id
 GROUP BY c.customer_id, c.address;
 
+SELECT * FROM CustomerPurchases;
+
 -- Create a view to extract month and year from the sale date and calculate total sales per item per month
 CREATE VIEW MonthlyItemSales AS
 SELECT
@@ -247,7 +256,10 @@ SELECT
 FROM SaleInformation
 GROUP BY DATE_FORMAT(date_sold, '%Y-%m'), sale_items;
 
+SELECT * FROM MonthlyItemSales;
+
 -- Find the highest-selling item per month
+CREATE VIEW highest_selling_item AS
 SELECT sale_month, item, total_sales
 FROM MonthlyItemSales
 WHERE (sale_month, total_sales) IN (
@@ -256,17 +268,25 @@ WHERE (sale_month, total_sales) IN (
     GROUP BY sale_month
 );
 
+SELECT * FROM highest_selling_item;
 
+COMMIT;
+
+START TRANSACTION;
 -- Trigger to update quantity_sold in Item table
+DELIMITER //
 CREATE TRIGGER update_quantity_sold
 AFTER
-INSERT ON Accounts FOR EACH ROW BEGIN
+INSERT ON Accounts FOR EACH ROW 
+BEGIN
 UPDATE Item
 SET quantity_sold = quantity_sold + NEW.quantity_sold
 WHERE item_id = NEW.item_id;
-END;
+END//
+DELIMITER ;
 
 -- Trigger to update money_owed in SupplierInformation table
+DELIMITER //
 CREATE TRIGGER update_money_owed
 AFTER INSERT ON SupplierOrder
 FOR EACH ROW
@@ -274,9 +294,11 @@ BEGIN
 	UPDATE SupplierInformation
     SET money_owed = money_owed + NEW.total_price
     WHERE address = NEW.address;
-END;
+END//
+DELIMITER ;
 
 -- Trigger to update item_total_quantity in Warehouse table
+DELIMITER //
 CREATE TRIGGER update_warehouse_quantity
 AFTER INSERT ON SupplierOrder
 FOR EACH ROW 
@@ -284,8 +306,12 @@ BEGIN
     UPDATE Warehouse
     SET item_total_quantity = item_total_quantity + NEW.quantity
     WHERE item_id = NEW.item_id;
-END;
+END//
+DELIMITER ;
 
+COMMIT;
+
+START TRANSACTION;
 -- Create view for profit/loss
 CREATE VIEW TotalCost AS
 SELECT
@@ -304,7 +330,9 @@ FROM
 	Accounts
 GROUP BY
 	item_id;
-    
+
+SELECT * FROM TotalCost;
+
 CREATE VIEW ProfitLoss AS
 SELECT
 	r.item_id,
@@ -315,4 +343,8 @@ FROM
 	TotalRevenue r
 JOIN
 	TotalCost c ON r.item_id = c.item_id;
+    
+SELECT * FROM ProfitLoss;
+
+COMMIT;
     
