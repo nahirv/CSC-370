@@ -1,0 +1,5 @@
+Customer_ID,Email,Address,Phone_number,order_history
+1,nagarjun@example.com,Victoria,77867472000,
+2,ollie@example.com,Langford,77867472123,
+3,ishan@example.com,Saanich,77867472124,
+4,nahir@example.com,Vancouver,77867472023,

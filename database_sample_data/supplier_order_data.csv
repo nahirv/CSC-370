@@ -1,0 +1,4 @@
+Order_ID,Address,Item_ID,Quantity,Unit_Price,Total_Price,Order_Date
+1,West Vancouver,1,10,30,300,2024-01-01
+2,Kelowna,2,100,20,2000,2024-02-01
+3,Vic,3,150,10,1500,2024-03-01
