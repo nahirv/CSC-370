@@ -28,7 +28,6 @@ CREATE TABLE Warehouse(
     address VARCHAR(128) PRIMARY KEY,
     item_id INT NOT NULL,
     item_total_quantity INT NOT NULL CHECK (item_total_quantity >= 0),
-    order_history VARCHAR(2048),
     FOREIGN KEY (item_id) REFERENCES Item(item_id)
 );
 
@@ -36,8 +35,7 @@ CREATE TABLE Warehouse(
 CREATE TABLE SupplierInformation(
     address VARCHAR(512) PRIMARY KEY,
     name VARCHAR(512) NOT NULL,
-    money_owed VARCHAR(512) NOT NULL,
-    order_history VARCHAR(512)
+    money_owed VARCHAR(512) NOT NULL
 );
 
 -- Supplier Order (Subclass)
@@ -64,21 +62,35 @@ CREATE TABLE CustomerInformation(
     customer_id INT PRIMARY KEY,
     address VARCHAR(512) NOT NULL,
     email_id VARCHAR(128) NOT NULL,
-    phone_number BIGINT DEFAULT NULL,
-    order_history VARCHAR(512)
+    phone_number BIGINT DEFAULT NULL
 );
+
+-- Customer Order History 
+CREATE TABLE CustomerOrderHistory(
+    customer_id INT,
+    sale_id INT,
+    FOREIGN KEY (cusotmer_id) REFERENCES CustomerInformation(customer_id),
+    FOREIGN KEY (sale_id) REFERENCES SaleInformation(sale_id)
+)
 
 -- Sale Information
 CREATE TABLE SaleInformation(
     sale_id INT PRIMARY KEY,
     status VARCHAR(64) NOT NULL,
     customer_id INT NOT NULL,
-    sale_items VARCHAR(2048),
     date_sold DATE NOT NULL,
     total_amount INT NOT NULL CHECK (total_amount >= 0),
     tracking_id VARCHAR(64),
     shipping_company VARCHAR(128),
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
+);
+
+-- Sale Items
+CREATE TABLE SaleItems(
+    sale_id INT,
+    sale_item_id INT,
+    FOREIGN KEY (sale_id) REFERENCES SaleInformation(sale_id),
+    FOREIGN KEY (sale_item_id) REFERENCES Item(item_id)
 );
 
 -- Customer Names (Weak Entity Set)
@@ -139,6 +151,13 @@ IGNORE 1 LINES;
 
 SELECT * FROM CustomerNames;
 
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\customer_order_history_data.csv' 
+INTO TABLE CustomerOrderHistory 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' 
+IGNORE 1 LINES;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\sale_information_data.csv' 
 INTO TABLE SaleInformation 
 FIELDS TERMINATED BY ',' 
@@ -147,6 +166,14 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES;
 
 SELECT * FROM SaleInformation;
+
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\sale_items_data.csv' 
+INTO TABLE SaleItems 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' 
+IGNORE 1 LINES;
+
 
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\supplier_data.csv' 
 INTO TABLE SupplierInformation 
