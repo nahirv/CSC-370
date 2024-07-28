@@ -1,4 +1,0 @@
-Sale_ID,Status,Customer_ID,Sale_Items,Date_Sold,Total_Amount,tracking_ID,shipping_company
-1,Completed,1,Laptop,2024-01-01,1500,QQ1234567890CA,USPS
-2,Pending,2,Chair,2024-02-01,2000,QQ1234567890US,DHL
-3,Completed,3,Apple,2024-03-01,250,QQ1234567890MX,FedEx
