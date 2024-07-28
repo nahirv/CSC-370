@@ -85,7 +85,7 @@ CREATE TABLE SaleInformation(
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
 
--- Sale Items (Weak Entity Set)
+-- Sale Items
 CREATE TABLE SaleItems(
     sale_id INT,
     sale_item_id INT,
