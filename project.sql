@@ -69,7 +69,7 @@ CREATE TABLE CustomerInformation(
 CREATE TABLE CustomerOrderHistory(
     customer_id INT,
     sale_id INT,
-    FOREIGN KEY (cusotmer_id) REFERENCES CustomerInformation(customer_id),
+    FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id),
     FOREIGN KEY (sale_id) REFERENCES SaleInformation(sale_id)
 )
 
