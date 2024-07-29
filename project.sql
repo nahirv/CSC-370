@@ -6,16 +6,21 @@ USE CompanyInventory;
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
 START TRANSACTION;
+
 -- Item (Base Class)
-CREATE TABLE Item (
+CREATE TABLE IF NOT EXISTS Item (
     item_id INT PRIMARY KEY,
     category VARCHAR(512) NOT NULL,
     item_name VARCHAR(512) NOT NULL,
     quantity_sold INT DEFAULT 0 CHECK (quantity_sold >= 0)
 );
 
+CALL checktables('Item');
+
+START TRANSACTION;
+
 -- Accounts (Subclass)
-CREATE TABLE Accounts(
+CREATE TABLE IF NOT EXISTS Accounts(
     item_id INT PRIMARY KEY,
     sale_unit_price INT NOT NULL CHECK (sale_unit_price >= 0),
     quantity_sold INT NOT NULL CHECK (quantity_sold >= 0),
@@ -23,23 +28,36 @@ CREATE TABLE Accounts(
     FOREIGN KEY (item_id) REFERENCES Item(item_id)
 );
 
+CALL checktables('Accounts');
+
+START TRANSACTION;
+
 -- Warehouse (Subclass)
-CREATE TABLE Warehouse(
+CREATE TABLE IF NOT EXISTS Warehouse(
     address VARCHAR(128) PRIMARY KEY,
     item_id INT NOT NULL,
     item_total_quantity INT NOT NULL CHECK (item_total_quantity >= 0),
+    order_history VARCHAR(2048),
     FOREIGN KEY (item_id) REFERENCES Item(item_id)
 );
 
+CALL checktables('Warehouse');
+
+START TRANSACTION;
+
 -- Supplier Information (Base Class)
-CREATE TABLE SupplierInformation(
+CREATE TABLE IF NOT EXISTS SupplierInformation(
     address VARCHAR(512) PRIMARY KEY,
     name VARCHAR(512) NOT NULL,
     money_owed VARCHAR(512) NOT NULL
 );
 
+CALL checktables('SupplierInformation');
+
+START TRANSACTION;
+
 -- Supplier Order (Subclass)
-CREATE TABLE SupplierOrder(
+CREATE TABLE IF NOT EXISTS SupplierOrder(
     order_id INT PRIMARY KEY,
     address VARCHAR(512) NOT NULL,
     item_id INT NOT NULL,
@@ -51,19 +69,31 @@ CREATE TABLE SupplierOrder(
     FOREIGN KEY (item_id) REFERENCES Item(item_id)
 );
 
+CALL checktables('SupplierOrder');
+
+START TRANSACTION;
+
 -- Admin
-CREATE TABLE Admin(
+CREATE TABLE IF NOT EXISTS Admin(
     admin_id INT PRIMARY KEY,
     admin_role VARCHAR(64) NOT NULL
 );
 
+CALL checktables('Admin');
+
+START TRANSACTION;
+DROP  TABLE CustomerInformation;
 -- Customer Information (missing in original code)
-CREATE TABLE CustomerInformation(
+CREATE TABLE IF NOT EXISTS CustomerInformation(
     customer_id INT PRIMARY KEY,
     address VARCHAR(512) NOT NULL,
     email_id VARCHAR(128) NOT NULL,
     phone_number BIGINT DEFAULT NULL
 );
+
+CALL checktables('CustomerInformation');
+
+START TRANSACTION;
 
 -- Customer Order History 
 CREATE TABLE CustomerOrderHistory(
@@ -71,10 +101,14 @@ CREATE TABLE CustomerOrderHistory(
     sale_id INT,
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id),
     FOREIGN KEY (sale_id) REFERENCES SaleInformation(sale_id)
-)
+);
 
+CALL checktables('CustomerOrderHistory');
+
+START TRANSACTION;
+DROP TABLE SaleInformation;
 -- Sale Information
-CREATE TABLE SaleInformation(
+CREATE TABLE IF NOT EXISTS SaleInformation(
     sale_id INT PRIMARY KEY,
     status VARCHAR(64) NOT NULL,
     customer_id INT NOT NULL,
@@ -85,6 +119,10 @@ CREATE TABLE SaleInformation(
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
 
+CALL checktables('SaleInformation');
+
+START TRANSACTION;
+
 -- Sale Items
 CREATE TABLE SaleItems(
     sale_id INT,
@@ -93,14 +131,44 @@ CREATE TABLE SaleItems(
     FOREIGN KEY (sale_item_id) REFERENCES Item(item_id)
 );
 
+CALL checktables('SaleItems');
+
+START TRANSACTION;
+
 -- Customer Names (Weak Entity Set)
-CREATE TABLE CustomerNames (
+CREATE TABLE IF NOT EXISTS CustomerNames (
     customer_id INT PRIMARY KEY,
     customer_name VARCHAR(64) NOT NULL,
     FOREIGN KEY (customer_id) REFERENCES CustomerInformation(customer_id)
 );
-COMMIT;
 
+CALL checktables('CustomerNames');
+
+
+DELIMITER //
+
+CREATE PROCEDURE checktables(IN tablename VARCHAR(255))
+BEGIN
+    DECLARE table_exists INT DEFAULT 0;
+
+    -- Check if the table 'Item' exists
+    SELECT COUNT(*)
+    INTO table_exists
+    FROM information_schema.tables 
+    WHERE table_schema = DATABASE() 
+    AND table_name = tablename;
+
+    IF table_exists = 1 THEN
+        COMMIT;
+    ELSE
+        ROLLBACK;
+    END IF;
+END //
+
+DELIMITER ;
+
+
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 -- Data Propagation
 START TRANSACTION;
 
@@ -142,6 +210,15 @@ IGNORE 1 LINES;
 
 SELECT * FROM CustomerInformation;
 
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\customer_order_history.csv' 
+INTO TABLE CustomerOrderHistory 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' 
+IGNORE 1 LINES;
+
+SELECT * FROM CustomerOrderHistory;
+
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\customer_names_data.csv' 
 INTO TABLE CustomerNames 
 FIELDS TERMINATED BY ',' 
@@ -151,13 +228,6 @@ IGNORE 1 LINES;
 
 SELECT * FROM CustomerNames;
 
-LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\customer_order_history_data.csv' 
-INTO TABLE CustomerOrderHistory 
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY '"' 
-LINES TERMINATED BY '\n' 
-IGNORE 1 LINES;
-
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\sale_information_data.csv' 
 INTO TABLE SaleInformation 
 FIELDS TERMINATED BY ',' 
@@ -166,14 +236,6 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES;
 
 SELECT * FROM SaleInformation;
-
-LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\sale_items_data.csv' 
-INTO TABLE SaleItems 
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY '"' 
-LINES TERMINATED BY '\n' 
-IGNORE 1 LINES;
-
 
 LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\database_sample_data\\supplier_data.csv' 
 INTO TABLE SupplierInformation 
